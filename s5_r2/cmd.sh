@@ -13,8 +13,8 @@
 
 export train_cmd="utils/run.pl"
 export decode_cmd="utils/run.pl"
-export cuda_cmd="utils/run.pl -l gpu=1"
-export sequitur_g2p="/usr/local/bin/g2p.py"
+export cuda_cmd="utils/run.pl -l gpu=2"
+export sequitur_g2p="/home/FH-ROSENHEIM/base830/.local/share/virtualenvs/kaldi-tuda-de-A-eLrlKY/bin/g2p.py"
 
-export nJobs=28
+export nJobs=30
 export nDecodeJobs=12

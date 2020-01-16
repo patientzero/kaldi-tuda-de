@@ -38,17 +38,20 @@ mfccdir=mfcc
 
 cleaned_data=${data}_${cleanup_affix}
 
-dir=${srcdir}_${cleanup_affix}_work
+dir=${srcdir}_${cleanup_affix}_work # work is fishy
 cleaned_dir=${srcdir}_${cleanup_affix}
 
 if [ $stage -le 1 ]; then
   # we need our own version of utt2dur, as it needs the read_entire_file set for tuda
   local/get_utt2dur.sh $data
   # This does the actual data cleanup.
+  echo "steps/cleanup/clean_and_segment_data.sh " "--stage $cleanup_stage --nj $nj --cmd" "$train_cmd"
+  echo "$data ${langdir} $srcdir $dir $cleaned_data"
   steps/cleanup/clean_and_segment_data.sh --stage $cleanup_stage --nj $nj --cmd "$train_cmd" \
     $data ${langdir} $srcdir $dir $cleaned_data
 fi
 
+echo "stage one done"
 if [ $stage -le 2 ]; then
   #recalculate cmvn
   steps/compute_cmvn_stats.sh $cleaned_data exp/make_mfcc/train_${cleanup_affix} $mfccdir

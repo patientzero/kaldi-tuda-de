@@ -157,6 +157,7 @@ if [ $stage -le 2 ]; then
   # If want to do experiments with very noisy data, you can also create Kaldi dirs for the Realtek microphone. Disabled in train/test/dev by default.
   # python3 local/data_prepare.py -f data/waveIDs.txt -p _Realtek -k _e
 
+#   local/get_utt2dur_new.sh --read_entire_file=true data/tuda_train
   local/get_utt2dur.sh data/tuda_train
   if [ $? -ne 0 ]; then
     echo "Error at get_utt2dur.sh with TUDA corpus. Exiting."
@@ -305,15 +306,14 @@ if [ $stage -le 6 ]; then
   unixtime=$(date +%s)
   # Move old lang dir if it exists
   mkdir -p ${lang_dir}/old_$unixtime/
-
-  mv ${lang_dir}/* ${lang_dir}/old_$unixtime/ || true
-
+  mv ${lang_dir}/* ${lang_dir}/old_$unixtime/ || true 
+  # the fuck man
 
   echo "Preparing the ${lang_dir} directory...."
 
   # Prepare phoneme data for Kaldi
   utils/prepare_lang.sh ${dict_dir} "<UNK>" ${local_lang_dir} ${lang_dir}
-
+  # optional silences needs linebreak how/why, currently seems just usb but only has 0 lines, adding line break with nano solves this.
   echo "Done!"
 fi
 
@@ -494,7 +494,7 @@ if [ $stage -le 11 ]; then
                utils/mkgraph.sh ${lang_dir}_test exp/tri1 $graph_dir
     
     for dset in dev test; do
-        steps/decode_si.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+        steps/decode_si.sh --nj $nDecodeJobs --num-threads 12 --cmd "$decode_cmd" --config conf/decode.config \
                        $graph_dir data/${dset} exp/tri1/decode_${dset}_nosp
     done
     
@@ -516,7 +516,7 @@ if [ $stage -le 12 ]; then
                utils/mkgraph.sh ${lang_dir}_test exp/tri2 $graph_dir
 
     for dset in dev test; do
-        steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+        steps/decode.sh --nj $nDecodeJobs  --num-threads 12 --cmd "$decode_cmd" --config conf/decode.config \
                     $graph_dir data/${dset} exp/tri2/decode_${dset}_nosp
     done
 fi
@@ -540,7 +540,7 @@ if [ $stage -le 13 ]; then
              utils/mkgraph.sh ${lang_dir}_test exp/tri3 $graph_dir
 
   for dset in dev test; do
-      steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+      steps/decode.sh --nj $nDecodeJobs  --num-threads 12 --cmd "$decode_cmd" --config conf/decode.config \
                   $graph_dir data/${dset} exp/tri3/decode_${dset}_nosp
   done
 fi
@@ -577,7 +577,7 @@ if [ $stage -le 14 ]; then
              utils/mkgraph.sh ${lang_dir}_test_pron exp/tri3 $graph_dir
   
   for dset in dev test; do
-      steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+      steps/decode.sh --nj $nDecodeJobs  --num-threads 12 --cmd "$decode_cmd" --config conf/decode.config \
                   $graph_dir data/${dset} exp/tri3/decode_${dset}_pron
   done
 fi
@@ -603,7 +603,7 @@ if [ $stage -le 15 ]; then
              utils/mkgraph.sh ${lang_dir}_test_pron exp/tri4 $graph_dir
 
   for dset in dev test; do
-      steps/decode_fmllr.sh --nj $nDecodeJobs --cmd "$decode_cmd" \
+      steps/decode_fmllr.sh --nj $nDecodeJobs  --num-threads 12 --cmd "$decode_cmd" \
                       --config conf/decode.config \
                       $graph_dir data/${dset} exp/tri4/decode_${dset}_pron
   done
@@ -621,11 +621,10 @@ fi
 
 if [ $stage -le 16 ]; then
   echo "Cleanup the corpus"
-  ./local/run_cleanup_segmentation.sh --langdir ${lang_dir}
+  ./local/run_cleanup_segmentation.sh --langdir ${lang_dir} --nj $nJobs
 fi
 
 if [ $stage -le 17 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
-  echo ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
-  ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
+  ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --stage 17
 fi

@@ -29,7 +29,7 @@ min_seg_len=1.55
 xent_regularize=0.1
 train_set=train_cleaned
 gmm=tri4_cleaned  # the gmm for the target data
-num_threads_ubm=1
+num_threads_ubm=32
 nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
@@ -42,8 +42,9 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 
 # how many GPU jobs to start in parallel
 num_jobs_initial=1
-num_jobs_final=2
+num_jobs_final=4
 
+CUDA_VISIBLE_DEVICES=2,3,4,6
 # these variables influnce training outcomes
 num_chunk_per_minibatch=128
 leaky_hmm_coefficient=0.1
@@ -54,7 +55,7 @@ num_epochs=4
 
 lang_dir=data/lang_300k4
 
-tdnn_affix=1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+tdnn_affix=no_ivec_1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
 
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
@@ -63,7 +64,7 @@ echo "$0 $@"  # Print the command line for logging
 . ./path.sh
 . ./utils/parse_options.sh
 
-export CUDA_VISIBLE_DEVICES=0,1
+
 if ! cuda-compiled; then
   cat <<EOF && exit 1
 This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
@@ -72,14 +73,14 @@ where "nvcc" is installed.
 EOF
 fi
 
-# local/run_ivector_common.sh --stage $stage \
-#                                   --nj $nj \
-#                                   --min-seg-len $min_seg_len \
-#                                   --train-set $train_set \
-#                                   --gmm $gmm \
-#                                   --num-threads-ubm $num_threads_ubm \
-#                                   --nnet3-affix "$nnet3_affix" \
-#                                   --lang-dir $lang_dir
+local/run_ivector_common.sh --stage $stage \
+                                  --nj $nj \
+                                  --min-seg-len $min_seg_len \
+                                  --train-set $train_set \
+                                  --gmm $gmm \
+                                  --num-threads-ubm $num_threads_ubm \
+                                  --nnet3-affix "$nnet3_affix" \
+                                  --lang-dir $lang_dir
 
 
 gmm_dir=exp/$gmm
@@ -151,13 +152,12 @@ if [ $stage -le 17 ]; then
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
   input dim=40 name=input
 
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-1,0,1) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-layer name=tdnn1 dim=$num_hidden self-repair-scale=1.0e-04
@@ -196,7 +196,6 @@ if [ $stage -le 18 ]; then
 
  steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$decode_cmd" \
-    --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
     --chain.leaky-hmm-coefficient $leaky_hmm_coefficient \
@@ -219,7 +218,9 @@ if [ $stage -le 18 ]; then
     --feat-dir $train_data_dir \
     --tree-dir $tree_dir \
     --lat-dir $lat_dir \
-    --dir $dir # Add this for restarting the training at a certain epoch, e.g. epoch 1542:
+    --dir $dir
+    --stage 365
+# Add this for restarting the training at a certain epoch, e.g. epoch 1542:
 #\
 #    --egs.stage 100 \
 #    --stage 1542
@@ -240,7 +241,6 @@ if [ $stage -le 20 ]; then
       
       steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
           --acwt 1.0 --post-decode-acwt 10.0 \
-          --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
           --scoring-opts "--min-lmwt 5 " \
          $dir/graph${decode_affix} data/${dset}_hires $dir/decode_${dset}${decode_affix} || exit 1;
     #  steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang data/lang_rescore \
