@@ -23,7 +23,7 @@ set -e -o pipefail
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
 stage=0
-nj=30
+nj=40
 decode_nj=16
 min_seg_len=1.55
 xent_regularize=0.1
@@ -44,7 +44,7 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 num_jobs_initial=1
 num_jobs_final=4
 
-CUDA_VISIBLE_DEVICES=2,3,4,6
+CUDA_VISIBLE_DEVICES=6,7
 # these variables influnce training outcomes
 num_chunk_per_minibatch=128
 leaky_hmm_coefficient=0.1
