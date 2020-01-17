@@ -1,0 +1,14 @@
+s5_r2/data/*
+steps/*
+utils/*
+steps
+utils
+s5_r2/exp/
+s5_r2/mfcc/
+s5_r2/rnnlm/
+s5_r2/local/__pycache__/
+g2p-r1668-r3.tar.gz
+g2p/
+s5_r2/other_lex/
+s5_r2/rnnlm/*
+s5_r2/rnnlm
