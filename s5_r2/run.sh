@@ -43,8 +43,8 @@ g2p_dir=data/local/g2p${dict_suffix}
 lm_dir=data/local/lm${dict_suffix}
 arpa_lm=${lm_dir}/4gram-mincount/lm_pr10.0.gz
 
-[ ! -L "steps" ] && ln -s ../../wsj/s5/steps
-[ ! -L "utils" ] && ln -s ../../wsj/s5/utils
+[ ! -L "steps" ] && ln -s /mnt/md0/tools/kaldi/egs/wsj/s5/steps/
+[ ! -L "utils" ] && ln -s /mnt/md0/tools/kaldi/egs/wsj/s5/utils/
 [ ! -L "rnnlm" ] && ln -s ../../../scripts/rnnlm/
 
 . utils/parse_options.sh
@@ -138,7 +138,6 @@ if [ $stage -le 1 ]; then
     fi
   fi
 fi
-
 #adapt this to the Sprachdatenaufnahmen2014 folder on your disk
 RAWDATA=data/wav/german-speechdata-package-v2
 
@@ -175,11 +174,10 @@ if [ $stage -le 3 ]; then
   then
       # this lexicon is licensed under LGPL
       wget --directory-prefix=data/lexicon/ https://raw.githubusercontent.com/marytts/marytts-lexicon-de/master/modules/de/lexicon/de.txt
-  #    echo "data/lexicon/train.txt">> data/lexicon_ids.txt
       echo "data/lexicon/de.txt">> data/lexicon_ids.txt
   fi
 
-  if [ use_BAS_dictionaries = true ] ; then
+  if [ $use_BAS_dictionaries = true ] ; then
 
     # These lexicons are publicly available on BAS servers, but can probably not be used in a commercial setting.
     if [ ! -f data/lexicon/VM.German.Wordforms ]
@@ -212,7 +210,7 @@ fi
 if [ $stage -le 4 ]; then
   #Transform freely available dictionaries into lexiconp.txt file + extra files 
   mkdir -p ${dict_dir}/
-  python3 local/build_big_lexicon.py -f data/lexicon_ids.txt -e data/local/combined.dict --export-dir ${dict_dir}/
+  python3 local/build_big_lexicon_less_phones.py -f data/lexicon_ids.txt -e data/local/combined.dict --export-dir ${dict_dir}/
   python3 local/export_lexicon.py -f data/local/combined.dict -o ${dict_dir}/_lexiconp.txt 
 fi
 
@@ -626,5 +624,6 @@ fi
 
 if [ $stage -le 17 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
-  ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --stage 17
+#   ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --stage 17
+  ./local/run_tdnn_no_ivector_1f.sh --lang_dir ${lang_dir} --stage 17
 fi
