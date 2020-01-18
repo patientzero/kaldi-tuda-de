@@ -16,6 +16,6 @@ export decode_cmd="utils/run.pl"
 export cuda_cmd="utils/run.pl -l gpu=2"
 export sequitur_g2p="/home/bayerlse/.local/bin/g2p.py"
 
-export nJobs=40
+export nJobs=30 # max number of jobs, as at one point a split has exactly 30 speakers, with 40 the script will fail
 export nDecodeJobs=12
 export CUDA_VISIBLE_DEVICES=6,7
