@@ -175,6 +175,8 @@ if [ $stage -le 3 ]; then
       # this lexicon is licensed under LGPL
       wget --directory-prefix=data/lexicon/ https://raw.githubusercontent.com/marytts/marytts-lexicon-de/master/modules/de/lexicon/de.txt
       echo "data/lexicon/de.txt">> data/lexicon_ids.txt
+      mv data/lexicon/de.txt  data/lexicon/de_allphones.txt
+      sed -e "s/'//g" -e 's/?//g' -e 's/"//g' data/lexicon/de_allphones.txt > data/lexicon/de.txt
   fi
 
   if [ $use_BAS_dictionaries = true ] ; then
