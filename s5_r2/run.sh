@@ -627,5 +627,5 @@ fi
 if [ $stage -le 17 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
 #   ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --stage 17
-  ./local/run_tdnn_no_ivector_1f.sh --lang_dir ${lang_dir} --stage 17
+  ./local/run_tdnn_no_ivector_1f.sh --lang_dir ${lang_dir}
 fi
